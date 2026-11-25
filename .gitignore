@@ -1,0 +1,11 @@
+node_modules/
+.next/
+dist/
+data/
+*.tsbuildinfo
+.env*
+!.env.example
+.sites-runtime/
+.wrangler/
+.vercel/
+outputs/

@@ -1,0 +1,15 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import {seed,mutate,bill,monthNow,today} from '../lib/kos.ts';
+import {db} from '../db/index.ts';
+test('demo occupancy and balances are consistent',()=>{const s=seed();assert.equal(s.rooms.length,20);assert.equal(s.tenants.filter(t=>t.active).length,16);assert.equal(s.tenants.filter(t=>bill(s,t,monthNow()).due>0).length,4);});
+test('partial payment reduces balance and rejects overpayment',()=>{const s=seed(),t=s.tenants[12],before=bill(s,t,monthNow()).due;mutate(s,'payment',{tenantId:t.id,month:monthNow(),date:today(),amount:500000,method:'Tunai'});assert.equal(bill(s,t,monthNow()).due,before-500000);assert.throws(()=>mutate(s,'payment',{tenantId:t.id,month:monthNow(),date:today(),amount:before,method:'Tunai'}));});
+test('room occupancy prevents double allocation and maintenance',()=>{const s=seed();assert.throws(()=>mutate(s,'tenant',{name:'Penghuni baru',phone:'081234567890',roomId:'r0',start:today()}));assert.throws(()=>mutate(s,'room',{...s.rooms[0],maintenance:true}));});
+test('checkout requires settlement then releases occupancy without losing history',()=>{const s=seed();assert.throws(()=>mutate(s,'checkout',{id:'t12'}));mutate(s,'checkout',{id:'t0'});assert.equal(s.tenants[0].active,false);assert.ok(s.payments.some(p=>p.tenantId==='t0'));assert.throws(()=>mutate(s,'deleteRoom',{id:'r0'}));});
+test('duplicate room number and invalid dates are rejected',()=>{const s=seed();assert.throws(()=>mutate(s,'room',{number:'A01',price:1000000}));assert.throws(()=>mutate(s,'tenant',{name:'Test',phone:'08123456789',roomId:'r17',start:'2099-12-01'}));});
+test('demo seed includes six months history, partial payment, and checked-out tenants',()=>{const s=seed();const months=new Set(s.payments.map(p=>p.month));assert.equal(months.size,6);assert.equal(s.tenants.filter(t=>!t.active).length,2);assert.ok(s.tenants.some(t=>{const b=bill(s,t,monthNow());return b.paid>0&&b.due>0;}));});
+test('libsql adapter initializes schema and persists batches via TURSO_DATABASE_URL',async()=>{const dir=mkdtempSync(join(tmpdir(),'juragankos-libsql-'));const prev=process.env.TURSO_DATABASE_URL;process.env.TURSO_DATABASE_URL=pathToFileURL(join(dir,'turso.sqlite')).href;try{await db.batch([db.prepare('INSERT INTO users(id,email,name,password,salt) VALUES(?,?,?,?,?)').bind('u1','turso@example.com','Turso User','hash','salt'),db.prepare('INSERT INTO records(user_id,payload,version) VALUES(?,?,0)').bind('u1','{"ok":true}')]);const row=await db.prepare('SELECT payload,version FROM records WHERE user_id=?').bind('u1').first<{payload:string;version:number}>();assert.equal(row?.payload,'{"ok":true}');assert.equal(row?.version,0);const res=await db.prepare('UPDATE records SET version=version+1 WHERE user_id=? AND version=?').bind('u1',0).run();assert.equal(res.meta.changes,1);}finally{if(prev===undefined)delete process.env.TURSO_DATABASE_URL;else process.env.TURSO_DATABASE_URL=prev;rmSync(dir,{recursive:true,force:true});}});
