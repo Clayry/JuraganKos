@@ -50,13 +50,14 @@ Asumsi bisnis karena PDF tidak menetapkan detailnya: satu properti per akun, sew
 
 ## Penyimpanan dan arsitektur
 
-- `app/page.tsx`: antarmuka dan navigasi modul.
+- `app/page.tsx`: antarmuka, modal profil/akun (pada avatar kanan atas), dan navigasi modul.
+- `app/globals.css`: gaya antarmuka dan tata letak responsif desktop maupun ponsel.
 - `app/api/manage/route.ts`: endpoint autentikasi dan mutasi dengan validasi sesi serta pemeriksaan origin.
 - `lib/kos.ts`: aturan bisnis, tipe data, perhitungan tagihan, dan data demo.
-- `db/index.ts`: koneksi SQLite, WAL, transaksi, dan prepared statements.
-- `db/migrations/001_initial.sql`: tabel `users`, `sessions`, dan `records`. Kamar, penghuni, dan pembayaran tersimpan sebagai agregat JSON per pemilik di `records` dengan nomor versi untuk menolak pembaruan bersamaan yang memakai data lama.
+- `db/index.ts`: adaptor database untuk SQLite lokal (`node:sqlite`, WAL) dan Turso (`@libsql/client`), inisialisasi skema otomatis, transaksi, dan prepared statements.
+- `db/migrations/001_initial.sql`: referensi skema tabel `users`, `sessions`, dan `records`. Kamar, penghuni, dan pembayaran tersimpan sebagai agregat JSON per pemilik di `records` dengan nomor versi untuk menolak pembaruan bersamaan yang memakai data lama.
 
-Database otomatis dibuat di `data/juragankos.sqlite`. Folder `data/` tidak masuk Git. Untuk lokasi berbeda, set variabel `DATABASE_PATH` ke path absolut pada disk persisten. Cadangkan database menggunakan mekanisme backup SQLite saat server berjalan, atau hentikan server sebelum menyalin seluruh folder `data/`.
+Database lokal otomatis dibuat di `data/juragankos.sqlite`. Folder `data/` tidak masuk Git. Untuk lokasi berbeda, set variabel `DATABASE_PATH` ke path absolut pada disk persisten. Cadangkan database menggunakan mekanisme backup SQLite saat server berjalan, atau hentikan server sebelum menyalin seluruh folder `data/`.
 
 ## Hosting Gratis (Vercel + Turso)
 
@@ -74,19 +75,18 @@ Aplikasi ini juga mendukung database SQLite awan **Turso** (`@libsql/client`) se
 2. **Push kode ke GitHub** (pastikan `node_modules/`, `.next/`, `data/`, dan `.env*` tetap diabaikan oleh `.gitignore`).
 3. **Deploy gratis di Vercel**:
    - Masuk ke [vercel.com](https://vercel.com) dengan akun GitHub, klik **Add New → Project**, lalu pilih repositori Anda.
-   - Atur **Root Directory** menjadi `juragankos` dan **Node.js Version** menjadi `22.x`.
+   - Biarkan **Root Directory** pada root repositori (`.`) dan atur **Node.js Version** menjadi `22.x`.
    - Tambahkan Environment Variables: `TURSO_DATABASE_URL` dan `TURSO_AUTH_TOKEN`.
    - Klik **Deploy** untuk mendapatkan URL HTTPS gratis (`*.vercel.app`). Akun demo yang kedaluwarsa akan dibersihkan otomatis setiap ada sesi demo baru.
+4. **Memperbarui aplikasi di Vercel**:
+   - Commit perubahan ke branch `main` lalu jalankan `git push origin main`; Vercel akan otomatis menjalankan `npm run build` dan merilis pembaruan.
+   - Alternatif manual jika tidak terhubung ke Git: jalankan `npx vercel --prod`.
 
-Konfigurasi `.openai/hosting.json` menyimpan identitas Site yang sempat diregistrasikan sebelumnya dan bukan konfigurasi deployment aktif.
+## Validasi
 
-## Validasi dan batas lingkungan
+- Build produksi Next.js (`npm run build`): berhasil.
+- Pemeriksaan TypeScript (`npm run typecheck`): berhasil.
+- Tujuh pengujian unit & adaptor (`tests/kos.test.ts`): aturan bisnis, konsistensi data demo, dan adaptor libSQL/Turso: berhasil.
+- Integrasi API (`scripts/test-api.mjs`): pendaftaran/login, penyimpanan kamar/penghuni/pembayaran, pembayaran sebagian, validasi checkout, konflik versi, pemeriksaan origin, alias `Host`, cookie HTTPS di balik proxy, penolakan tanpa autentikasi, isolasi akun, logout, dan pembersihan demo kedaluwarsa: berhasil.
 
-- Build produksi Next.js: berhasil.
-- Pemeriksaan TypeScript: berhasil.
-- Lima pengujian aturan bisnis: berhasil.
-- Integrasi API: pendaftaran/login, penyimpanan kamar/penghuni/pembayaran, pembayaran sebagian, validasi checkout, konflik versi, pemeriksaan origin, penolakan tanpa autentikasi, isolasi akun, logout: berhasil.
-- Browser dan server HTTP lokal belum diverifikasi: sandbox pengerjaan menolak binding port (`listen EPERM`).
-- Publikasi online belum selesai: registry npm tidak terjangkau dari lingkungan pengerjaan. Dependensi yang tersedia secara lokal dipakai untuk menyelesaikan build dan pengujian.
-
-`experimental.useTypeScriptCli: false` memakai API TypeScript untuk build agar tidak bergantung pada proses CLI terpisah yang bermasalah di sandbox. Pemeriksaan tipe build tetap aktif.
+`experimental.useTypeScriptCli: false` di `next.config.ts` memakai API TypeScript untuk build tanpa bergantung pada proses CLI terpisah, sementara pemeriksaan tipe build tetap aktif.
