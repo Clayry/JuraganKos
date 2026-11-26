@@ -484,7 +484,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <aside className={'sidebar ' + (mobile ? 'open' : '')}>
+      <aside id="app-sidebar" className={'sidebar' + (mobile ? ' open' : '')}>
         <a
           className="brand"
           href="#"
@@ -496,8 +496,10 @@ export default function App() {
           <span className="brand-icon">
             <House size={20} aria-hidden="true" />
           </span>
-          Juragan<span>Kos</span>
-          <i>®</i>
+          <span className="brand-text">
+            Juragan<span>Kos</span>
+            <i>®</i>
+          </span>
         </a>
 
         <button
@@ -553,7 +555,7 @@ export default function App() {
             aria-current={page === 'settings' ? 'page' : undefined}
           >
             <Settings size={18} aria-hidden="true" />
-            Pengaturan
+            <span>Pengaturan</span>
           </button>
         </div>
       </aside>
@@ -572,7 +574,9 @@ export default function App() {
             <button
               type="button"
               className="mobile-menu icon-button"
-              aria-label="Buka menu"
+              aria-label={mobile ? 'Tutup menu' : 'Buka menu'}
+              aria-expanded={mobile}
+              aria-controls="app-sidebar"
               onClick={() => setMobile(!mobile)}
             >
               <Menu size={20} aria-hidden="true" />

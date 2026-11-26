@@ -210,6 +210,7 @@ svg {
   display: flex;
   flex-direction: column;
   padding: var(--space-lg) var(--space-md) calc(var(--space-lg) + env(safe-area-inset-bottom, 0px));
+  transition: width 0.22s ease, padding 0.22s ease, box-shadow 0.22s ease;
   z-index: 30;
 }
 
@@ -227,7 +228,13 @@ svg {
   color: var(--color-foreground);
 }
 
-.brand > span:not(.brand-icon) {
+.brand-text {
+  display: inline-flex;
+  align-items: center;
+}
+
+.brand > span:not(.brand-icon):not(.brand-text),
+.brand-text > span {
   color: var(--color-primary);
 }
 
@@ -477,6 +484,7 @@ nav button b {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 0 var(--space-xl);
   position: sticky;
   top: 0;
@@ -487,13 +495,21 @@ nav button b {
   display: flex;
   gap: 10px;
   align-items: center;
+  min-width: 0;
   font-size: 13px;
   color: var(--color-muted-foreground);
+}
+
+.breadcrumb > span {
+  white-space: nowrap;
 }
 
 .breadcrumb strong {
   font-weight: 600;
   color: var(--color-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top-actions {
@@ -2148,6 +2164,196 @@ textarea {
 
   .auth-illustration > div:nth-child(3) {
     left: 110px;
+  }
+}
+
+@media (min-width: 761px) {
+  .sidebar {
+    width: 76px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .workspace {
+    margin-left: 76px;
+    width: calc(100% - 76px);
+  }
+
+  .sidebar .brand {
+    justify-content: center;
+  }
+
+  .sidebar .brand-icon {
+    margin-right: 0;
+  }
+
+  .sidebar .brand-text {
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+  }
+
+  .sidebar .property-switch {
+    justify-content: center;
+    padding: 11px 6px;
+    gap: 0;
+  }
+
+  .sidebar .property-switch > span:nth-child(2) {
+    flex: 0 0 0;
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .sidebar .property-switch > svg {
+    display: none;
+  }
+
+  .sidebar .nav-label {
+    opacity: 0;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .sidebar nav button {
+    justify-content: center;
+    padding: 11px;
+    gap: 0;
+    position: relative;
+  }
+
+  .sidebar nav button > span {
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .sidebar nav button > b {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    margin-left: 0;
+    padding: 0 4px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar .help-card {
+    display: none;
+  }
+
+  .sidebar .settings-link {
+    justify-content: center;
+    padding: 11px;
+    gap: 0;
+    margin-top: 0;
+  }
+
+  .sidebar .settings-link > span {
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .sidebar:hover,
+  .sidebar:has(:focus-visible) {
+    width: 256px;
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
+    box-shadow: var(--shadow-xl);
+  }
+
+  .sidebar:hover .brand,
+  .sidebar:has(:focus-visible) .brand {
+    justify-content: flex-start;
+  }
+
+  .sidebar:hover .brand-icon,
+  .sidebar:has(:focus-visible) .brand-icon {
+    margin-right: 10px;
+  }
+
+  .sidebar:hover .brand-text,
+  .sidebar:has(:focus-visible) .brand-text {
+    opacity: 1;
+    max-width: 180px;
+  }
+
+  .sidebar:hover .property-switch,
+  .sidebar:has(:focus-visible) .property-switch {
+    justify-content: flex-start;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+
+  .sidebar:hover .property-switch > span:nth-child(2),
+  .sidebar:has(:focus-visible) .property-switch > span:nth-child(2) {
+    flex: 1;
+    max-width: 180px;
+    opacity: 1;
+  }
+
+  .sidebar:hover .property-switch > svg,
+  .sidebar:has(:focus-visible) .property-switch > svg {
+    display: block;
+  }
+
+  .sidebar:hover .nav-label,
+  .sidebar:has(:focus-visible) .nav-label {
+    opacity: 1;
+  }
+
+  .sidebar:hover nav button,
+  .sidebar:has(:focus-visible) nav button {
+    justify-content: flex-start;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+
+  .sidebar:hover nav button > span,
+  .sidebar:has(:focus-visible) nav button > span {
+    opacity: 1;
+    max-width: 180px;
+  }
+
+  .sidebar:hover nav button > b,
+  .sidebar:has(:focus-visible) nav button > b {
+    position: static;
+    margin-left: auto;
+    padding: 2px 7px;
+    min-width: 0;
+    height: auto;
+    font-size: 11px;
+    line-height: inherit;
+    display: inline;
+  }
+
+  .sidebar:hover .help-card,
+  .sidebar:has(:focus-visible) .help-card {
+    display: block;
+  }
+
+  .sidebar:hover .settings-link,
+  .sidebar:has(:focus-visible) .settings-link {
+    justify-content: flex-start;
+    padding: 10px 12px;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .sidebar:hover .settings-link > span,
+  .sidebar:has(:focus-visible) .settings-link > span {
+    opacity: 1;
+    max-width: 180px;
   }
 }
 
